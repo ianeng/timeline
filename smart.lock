@@ -4,41 +4,23 @@
     "basePackages": {
       "bootstrap3-datepicker": {},
       "moment": {},
-      "jquery-ui": {},
-      "mongodb-aggregation": {},
-      "bootstrap3-slider-touch": {},
-      "jquery-ui-bootstrap": {}
+      "bootstrap3-slider-touch": {}
     },
     "packages": {
       "bootstrap3-datepicker": {
         "git": "https://github.com/rajit/bootstrap3-datepicker.git",
-        "tag": "v0.2.0",
-        "commit": "e773c83065de04af77e95cf9b8f4d10d44615cb6"
+        "tag": "v0.2.1",
+        "commit": "442484eb1c8eb00c6b9e0e9c88accc934cf8f04a"
       },
       "moment": {
         "git": "https://github.com/acreeger/meteor-moment.git",
-        "tag": "v2.5.1",
-        "commit": "8c9bc5d3fc96705057737cb9743d555417f6e551"
-      },
-      "jquery-ui": {
-        "git": "https://github.com/TimHeckel/meteor-jquery-ui.git",
-        "tag": "v1.9.2",
-        "commit": "c437d45edcf1367df8d5ffa8bad2867758030bd2"
-      },
-      "mongodb-aggregation": {
-        "git": "https://github.com/jhoxray/meteor-mongo-extensions.git",
-        "tag": "v0.1.71",
-        "commit": "da9661c47b3797cec062005f01f84a4723051438"
+        "tag": "v2.6.0",
+        "commit": "26156df681750fd6e6ed77043eef32b6653ebbdf"
       },
       "bootstrap3-slider-touch": {
         "git": "https://github.com/jcchin/meteor-bootstrap-slider-touch/",
         "tag": "v2.0.3",
         "commit": "3f8ce5ad2696fb80c337949890e2ded415ac3239"
-      },
-      "jquery-ui-bootstrap": {
-        "git": "https://github.com/TimHeckel/meteor-jquery-ui-bootstrap.git",
-        "tag": "v0.1.2",
-        "commit": "fa742a85639307003e105898e15b631394b63509"
       }
     }
   }
