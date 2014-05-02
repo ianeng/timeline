@@ -1,0 +1,10 @@
+{
+  "packages": {
+    "bootstrap3-datepicker": {},
+    "moment": {},
+    "jquery-ui": {},
+    "mongodb-aggregation": {},
+    "bootstrap3-slider-touch": {},
+    "jquery-ui-bootstrap": {}
+  }
+}
