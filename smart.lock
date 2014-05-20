@@ -4,7 +4,9 @@
     "basePackages": {
       "bootstrap3-datepicker": {},
       "moment": {},
-      "bootstrap3-slider-touch": {}
+      "bootstrap3-slider-touch": {},
+      "select2-bootstrap3-css": {},
+      "select2": {}
     },
     "packages": {
       "bootstrap3-datepicker": {
@@ -21,6 +23,16 @@
         "git": "https://github.com/jcchin/meteor-bootstrap-slider-touch/",
         "tag": "v2.0.3",
         "commit": "3f8ce5ad2696fb80c337949890e2ded415ac3239"
+      },
+      "select2-bootstrap3-css": {
+        "git": "https://github.com/esperadomedia/meteor-select2-bootstrap3-css.git",
+        "tag": "v0.0.5",
+        "commit": "ac0c74d4b110c4c5149f17bb33c3e9bb4f77eb88"
+      },
+      "select2": {
+        "git": "https://github.com/nate-strauser/meteor-select2.git",
+        "tag": "v3.4.5",
+        "commit": "4a8d05582b949a14f0ee217c185166abbf112822"
       }
     }
   }

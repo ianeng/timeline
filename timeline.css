@@ -1,5 +1,9 @@
 /* CSS declarations go here */
 
+html {
+	overflow-y: scroll; 
+}
+
 .entryListings {
 	padding: 30px;
 }
@@ -10,6 +14,9 @@
 	margin-top: 30px;
 }
 
+.tagTitle {
+	margin-bottom: 10px;
+}
 #editModal
 {
   /*width: 950px; your width 
@@ -100,4 +107,19 @@
 	width: 60px;
 	right: 0px;
 	vertical-align: middle;
+}
+
+.floatButtons.tagModal {
+	width: 35px;
+}
+
+.tagButtons {
+	position: absolute;
+	width: 90px;
+	right: 0px;
+	vertical-align: middle;
+}
+
+.tagTitle {
+	cursor: pointer;
 }

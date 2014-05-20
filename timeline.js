@@ -11,6 +11,7 @@ if (Meteor.isClient) {
   Session.set("yAxisOffset", 578);
   Session.set("entryDivWidth", 300);
   Session.set("divWidth", 300);
+  Session.set("checkedTags", "")
 
   Template.timeline.boxHeight = function () {
   	return Session.get("yAxisOffset") - 15;
@@ -176,22 +177,35 @@ if (Meteor.isClient) {
       }
     });
 
-  // Template.tagList.tags = function () {
-  //     var myArray = EventEntries.find().fetch();
-  //     var distinctArray = _.uniq(myArray, false, function(d) {return d.eventTags});
-  //     // console.log(distinctArray)
-  //     var distinctValues = _.pluck(distinctArray, 'eventTags');
-
-  //     tagObj = [];
-  //     for (var x in distinctValues) {
-  //       var tagName = distinctValues[x];
-  //       tagObj.push({'tagName': tagName});
-  //       console.log(tagName)
-  //     }
-  //     console.log(tagObj);
-
-  // 	return tagObj;
-  // }
+  Template.tagList.tags = function () {
+	var myArray = EventEntries.find().fetch();
+	var pluckedArray = _.pluck(myArray, 'eventTags');
+	var flattenedArray = _.flatten(pluckedArray);
+	return _.unique(flattenedArray);
+  }
+  Template.tagList.events({
+    'click #addTagButton': function(event) {
+    	if (this) {
+        	Meteor.call("checkTag", this.toString());
+        }
+    }, 
+    'click #removeTagButton': function(event) {
+    	if (this) {
+        	Meteor.call("uncheckTag", this.toString());
+        }
+    },
+    'click #addAllButton': function(event) {
+        Meteor.call("checkAll");
+    }, 
+    'click #removeAllButton': function(event) {
+        Meteor.call("uncheckAll");
+    },
+    'click .tagName': function (event) {
+    	console.log(this.toString());
+    	Session.set("tagModalTag", this.toString());
+    	$("#tagModal").modal("show");
+    }
+  });
 
   Template.settingsPane.yAxisOffset = function () {
     return Session.get("yAxisOffset");
@@ -213,12 +227,11 @@ if (Meteor.isClient) {
     });
     $('#widthSlider').slider({
       min: 100,
-      max: 500
+      max: 500 
     }).on('slide', function (slideEvt) {
       var slideVal = slideEvt.value;
       AppSettings.update(Session.get("appSettingsID"), { $set: { entryDivWidth: slideVal } });
     });
-
     $('#divWidthSlider').slider({
       min: 100,
       max: 500
@@ -238,7 +251,12 @@ if (Meteor.isClient) {
     return Session.get("editEventDate");
   }
   Template.editModal.editEventTags = function () {
-    return Session.get("editEventTags");
+  	var rawList = Session.get("editEventTags");
+  	var tagString = "";
+  	if (rawList) {
+  		tagString = rawList.join(', ');
+  	}
+    return tagString;
   }
   Template.editModal.editEventID = function () {
     return Session.get("editEventID");
@@ -290,6 +308,37 @@ if (Meteor.isClient) {
       $("#removeModal").modal("hide");
     }
   });
+
+	Template.tagModal.tagName = function () {
+		return Session.get("tagModalTag");
+	}
+
+	Template.tagModal.Events = function () {
+    	return EventEntries.find({ eventTags: Session.get("tagModalTag") }, { sort: { eventDate: 1, timeStamp: 1 }})
+  	}
+
+  	Template.tagModal.otherEvents = function () {
+    	return EventEntries.find({ eventTags: { $not: Session.get("tagModalTag") } }, { sort: { eventDate: 1, timeStamp: 1 }})
+  	}
+
+  	Template.tagModal.events({
+  		'click #removeFromTagButton': function (e) {
+  			EventEntries.update( { _id: this._id }, { $pull: { eventTags: Session.get("tagModalTag") } });
+  		},
+  		'change #addEntryVal': function (e) {
+  			
+  			var selectedID = $( "select option:selected" ).val();
+  			console.log(selectedID)
+
+  			if (selectedID && selectedID != "default") {
+  				EventEntries.update( { _id: selectedID }, { $push: { eventTags: Session.get("tagModalTag") } })
+  			}
+
+  			$( '#addEntryVal' ).val("default");
+
+  		}
+  	})
+
 
   var DateFormats = {
          short: "MMM. D, YYYY",
@@ -401,12 +450,13 @@ if (Meteor.isClient) {
 			Session.set("yAxisOffset", yAxisOffset);
 			Session.set("divWidth", appSettingsQuery[0].divWidth);
 			Session.set("entryDivWidth", appSettingsQuery[0].entryDivWidth);
-	  } else {
-      AppSettings.insert({
-        yAxisOffset: 578,
-        entryDivWidth: 300, 
-        divWidth: 300
-      });
+			Session.set("checkedTags", appSettingsQuery[0].checkedTags);
+	  	} else {
+	      AppSettings.insert({
+	        yAxisOffset: 578,
+	        entryDivWidth: 300, 
+	        divWidth: 300
+	      });
     }
   });
 
@@ -447,4 +497,26 @@ if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
   });
+
+
+
+	Meteor.methods({
+	  checkTag: function (tagName) {
+	    EventEntries.update( { eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
+	    return true;
+	  }, 
+	  uncheckTag: function (tagName) {
+	  	EventEntries.update( { eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
+	  	return true;
+	  }, 
+	  checkAll: function () {
+	  	EventEntries.update( {}, { $set: { checked: true } }, { multi: true } ) 
+	  	return true;
+	  },
+	  uncheckAll: function () {
+	  	EventEntries.update( {}, { $set: { checked: false } }, { multi: true } ) 
+	  	return true;
+	  }
+	});
+
 }

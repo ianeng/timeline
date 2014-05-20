@@ -2,6 +2,8 @@
   "packages": {
     "bootstrap3-datepicker": {},
     "moment": {},
-    "bootstrap3-slider-touch": {}
+    "bootstrap3-slider-touch": {},
+    "select2-bootstrap3-css": {},
+    "select2": {}
   }
 }

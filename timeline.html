@@ -5,17 +5,19 @@
 <body>
 {{> editModal}}
 {{> removeModal}}
+{{> tagModal}}
 	<div class="entryListings">
 	<!-- <span id="pageTitle"><h2>Timeline of Key Events</h2></span> -->
 		{{> timeline}}
 
 		<div id="controlKit" class=".container">
 			{{> newEventForm}}
-			<div style="clear: right;"></div>
+			<div style="clear: all;"></div>
 			{{> EventList}}
-			{{> tagList}}
-			<div style="clear: right;"></div>
 			{{> settingsPane}}
+			<div style="clear: right;"></div>
+			{{> tagList}}
+						
    		</div>
   	</div>	
 
@@ -129,18 +131,32 @@
 
 
 <template name="tagList">
-	<div class="panel panel-default" style="margin-top: 30px;">
+	<div class="panel panel-default" >
   		<div class="panel-heading">Tags</div>
   		<div class="panel-body">
-<!--     		{{#each tags}}
-    			{{tagName}}
-    		{{/each}} -->
+  			<div class="tagTitle">
+    			All
+    			<span class="tagButtons">
+    				<button id="addAllButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
+    				<button id="removeAllButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-minus"></span></button>
+				</span>
+			</div>
+
+    		{{#each tags}}
+				<div class="tagTitle">
+					<span class="tagName">{{.}}</span>
+					<span class="tagButtons">
+						<button id="addTagButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
+						<button id="removeTagButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-minus"></span></button>
+					</span>
+				</div>
+    		{{/each}}
   		</div>
 	</div>
 </template>
 
 <template name="settingsPane">
-	<div class="panel panel-default">
+	<div class="panel panel-default" style="margin-top: 30px;">
   		<div class="panel-heading">Settings</div>
   		<div class="panel-body">
     		<form role="form">
@@ -213,6 +229,50 @@
       			<div class="modal-footer">
         			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
         			<button id="confirmRemove" type="button" class="btn btn-danger">Delete</button>
+      			</div>
+    		</div>
+  		</div>
+  	</div>
+
+</template>
+
+<template name="tagModal">
+	<div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+    		<div class="modal-content">
+      			<div class="modal-header">
+        			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        			<h4 class="modal-title" id="myModalLabel">{{tagName}}</h4>
+      			</div>
+      			<div class="modal-body">
+						  <ul class="list-group">
+						  		{{#each Events}}
+									<li class="list-group-item">
+						
+								    			<span class="eventTitle">
+								    				<strong>{{eventTitle}}:</strong> {{subTitle}} - <small>{{formatDate eventDate "short"}} </small>
+								    			</span>
+								    	
+							    		
+							    		<span class="floatButtons tagModal">
+							    			<button id="removeFromTagButton" type="button" class="btn btn-default btn-xs"> <span class="glyphicon glyphicon-remove"></span> </button>
+							    		</span>
+										
+							
+									</li>
+								{{/each}}
+						  </ul>
+
+						  <select class="form-control" id="addEntryVal">
+							  <option value="default">Add an entry to this tag</option>
+							  {{#each otherEvents}}
+								  <option value="{{_id}}">{{eventTitle}} - {{formatDate eventDate "short"}}</option>
+								{{/each}}
+							</select>
+					
+      			</div>
+      			<div class="modal-footer">
+        			<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
       			</div>
     		</div>
   		</div>
