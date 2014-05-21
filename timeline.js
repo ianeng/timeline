@@ -1,7 +1,22 @@
 EventEntries = new Meteor.Collection('EventEntries');
 AppSettings = new Meteor.Collection('AppSettings');
-// EventEntries.remove({})
-// AppSettings.remove({}) 
+Cases = new Meteor.Collection('Cases');
+
+// AppSettings.remove({});
+
+Router.map(function() {
+  this.route('home', {path: '/'})
+  this.route('timelineTemp', {
+    path: '/timeline/:_id',
+    data: function() { 
+      Session.set("caseID", this.params._id);
+      return Cases.findOne({_id: this.params._id
+    }); }
+    // waitOn: function () { return Meteor.subscribe('caseID', this.params.caseID)}
+  });
+});
+
+
 
 if (Meteor.isClient) {
 
@@ -13,13 +28,48 @@ if (Meteor.isClient) {
   Session.set("divWidth", 300);
   Session.set("checkedTags", "")
 
+  Template.home.Cases = function () {
+    return Cases.find({});
+  }
+
+
+  Template.timelineTemp.rendered = function () {
+    newWindowSize();
+  }
+
   Template.timeline.boxHeight = function () {
   	return Session.get("yAxisOffset") - 15;
   }
 
   Template.timeline.EventEntries = function () {
-    return EventEntries.find({ checked: true, eventDate: {$gte: Session.get("beginTimeline"), $lt: Session.get("endTimeline")}}, { sort: { eventDate: 1 }});
+    console.log(this._id)
+    return EventEntries.find({ checked: true, caseID: this._id, eventDate: {$gte: Session.get("beginTimeline"), $lt: Session.get("endTimeline")}}, { sort: { eventDate: 1 }});
   }
+
+  Template.timeline.rendered = function () {
+      $("#timelineBox").hover(function(){
+        $("#editButton").stop().fadeIn("slow");
+      },
+      function(){
+          $("#editButton").stop().fadeOut();
+      });
+  }
+
+  Template.timeline.events({
+      'click #editButton': function () {
+          if (Session.get("controlKitShow")) {
+              $( "#controlKit" ).fadeOut("slow");
+              Session.set("controlKitShow", false);
+              newWindowSize();
+          } else {
+            $( "#controlKit" ).fadeIn("slow");
+            Session.set("controlKitShow", true);
+            newWindowSize();
+          }
+      }
+  });
+
+
   Template.timelineEvent.leftOffset = function () {
   	return dateToXPos(this.eventDate) + 30;
   }
@@ -128,7 +178,8 @@ if (Meteor.isClient) {
           eventDate: dateCleaned,
           eventTags: tagArray,
           timeStamp: Date.now(), 
-          checked: false
+          checked: false,
+          caseID: this._id
         });
 
         eventTitle.value = '';
@@ -141,7 +192,7 @@ if (Meteor.isClient) {
   });
 
   Template.EventList.Events = function () {
-    return EventEntries.find({}, { sort: { eventDate: 1, timeStamp: 1 }})
+    return EventEntries.find({ caseID: this._id }, { sort: { eventDate: 1, timeStamp: 1 }})
   
   }
   Template.EventList.checked = function () {
@@ -178,10 +229,10 @@ if (Meteor.isClient) {
     });
 
   Template.tagList.tags = function () {
-	var myArray = EventEntries.find().fetch();
-	var pluckedArray = _.pluck(myArray, 'eventTags');
-	var flattenedArray = _.flatten(pluckedArray);
-	return _.unique(flattenedArray);
+  	var myArray = EventEntries.find({ caseID: Session.get("caseID") }).fetch();
+  	var pluckedArray = _.pluck(myArray, 'eventTags');
+  	var flattenedArray = _.flatten(pluckedArray);
+  	return _.unique(flattenedArray);
   }
   Template.tagList.events({
     'click #addTagButton': function(event) {
@@ -223,21 +274,21 @@ if (Meteor.isClient) {
       max: 1000
     }).on('slide', function (slideEvt) {
       var slideVal = slideEvt.value;
-      AppSettings.update(Session.get("appSettingsID"), { $set: { yAxisOffset: slideVal } });
+      Cases.update({ _id: Session.get("caseID") }, { $set: { yAxisOffset: slideVal } });
     });
     $('#widthSlider').slider({
       min: 100,
       max: 500 
     }).on('slide', function (slideEvt) {
       var slideVal = slideEvt.value;
-      AppSettings.update(Session.get("appSettingsID"), { $set: { entryDivWidth: slideVal } });
+      Cases.update({ _id: Session.get("caseID") }, { $set: { entryDivWidth: slideVal } });
     });
     $('#divWidthSlider').slider({
       min: 100,
       max: 500
     }).on('slide', function (slideEvt) {
       var slideVal = slideEvt.value;
-      AppSettings.update(Session.get("appSettingsID"), { $set: { divWidth: slideVal } });
+      Cases.update({ _id: Session.get("caseID") }, { $set: { divWidth: slideVal } });
     });
   }
 
@@ -314,11 +365,11 @@ if (Meteor.isClient) {
 	}
 
 	Template.tagModal.Events = function () {
-    	return EventEntries.find({ eventTags: Session.get("tagModalTag") }, { sort: { eventDate: 1, timeStamp: 1 }})
+    	return EventEntries.find({ caseID: Session.get("caseID"), eventTags: Session.get("tagModalTag") }, { sort: { eventDate: 1, timeStamp: 1 }})
   	}
 
   	Template.tagModal.otherEvents = function () {
-    	return EventEntries.find({ eventTags: { $not: Session.get("tagModalTag") } }, { sort: { eventDate: 1, timeStamp: 1 }})
+    	return EventEntries.find({ caseID: Session.get("caseID"), eventTags: { $not: Session.get("tagModalTag") } }, { sort: { eventDate: 1, timeStamp: 1 }})
   	}
 
   	Template.tagModal.events({
@@ -418,7 +469,7 @@ if (Meteor.isClient) {
 
   Deps.autorun(function () {
 
-		var earliestEntry = EventEntries.find({ checked: true }, { sort: { eventDate: 1 }, limit: 1 }).fetch(); 
+		var earliestEntry = EventEntries.find({ caseID: Session.get("caseID"), checked: true }, { sort: { eventDate: 1 }, limit: 1 }).fetch(); 
 		if (earliestEntry.length > 0 ) {
 			var beginTimeline = earliestEntry[0].eventDate;
 			beginTimeline.setFullYear(beginTimeline.getFullYear()-1);
@@ -426,7 +477,7 @@ if (Meteor.isClient) {
 			newWindowSize();
 		}
 
-		var lastEntry = EventEntries.find({ checked: true }, { sort: { eventDate: -1 }, limit: 1 }).fetch(); 
+		var lastEntry = EventEntries.find({ caseID: Session.get("caseID"), checked: true }, { sort: { eventDate: -1 }, limit: 1 }).fetch(); 
 		if (lastEntry.length > 0 ) {
 			var endTimeline = lastEntry[0].eventDate;
       var dateAtBuffer = dateOfRightSideDivWidth(endTimeline);
@@ -443,21 +494,22 @@ if (Meteor.isClient) {
 			newWindowSize();
 		}
 
-		var appSettingsQuery = AppSettings.find({}, { sort: { _id: -1 }, limit: 1 }).fetch(); 
+		var appSettingsQuery = Cases.find({ _id: Session.get("caseID") }, { sort: { _id: -1 }, limit: 1 }).fetch(); 
 		if (appSettingsQuery.length > 0) {
-			Session.set("appSettingsID", appSettingsQuery[0]._id);
-			var yAxisOffset = appSettingsQuery[0].yAxisOffset;
-			Session.set("yAxisOffset", yAxisOffset);
-			Session.set("divWidth", appSettingsQuery[0].divWidth);
-			Session.set("entryDivWidth", appSettingsQuery[0].entryDivWidth);
-			Session.set("checkedTags", appSettingsQuery[0].checkedTags);
-	  	} else {
-	      AppSettings.insert({
-	        yAxisOffset: 578,
-	        entryDivWidth: 300, 
-	        divWidth: 300
-	      });
-    }
+			// Session.set("appSettingsID", appSettingsQuery[0]._id);
+      if (appSettingsQuery[0].yAxisOffset) { Session.set("yAxisOffset", appSettingsQuery[0].yAxisOffset) };
+			if (appSettingsQuery[0].divWidth) { Session.set("divWidth", appSettingsQuery[0].divWidth) };
+			if (appSettingsQuery[0].entryDivWidth) { Session.set("entryDivWidth", appSettingsQuery[0].entryDivWidth) };
+			if (appSettingsQuery[0].checkedTags) { Session.set("checkedTags", appSettingsQuery[0].checkedTags) };
+	  	} 
+      // else {
+	     //  AppSettings.insert({
+	     //    yAxisOffset: 578,
+	     //    entryDivWidth: 300, 
+	     //    divWidth: 300
+	     //  }
+        // );
+    // }
   });
 
  Meteor.startup(function () {
@@ -502,21 +554,30 @@ if (Meteor.isServer) {
 
 	Meteor.methods({
 	  checkTag: function (tagName) {
-	    EventEntries.update( { eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
+	    EventEntries.update( { caseID: Session.get("caseID"), eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
 	    return true;
 	  }, 
 	  uncheckTag: function (tagName) {
-	  	EventEntries.update( { eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
+	  	EventEntries.update( { caseID: Session.get("caseID"), eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
 	  }, 
 	  checkAll: function () {
-	  	EventEntries.update( {}, { $set: { checked: true } }, { multi: true } ) 
+	  	EventEntries.update( { caseID: Session.get("caseID") }, { $set: { checked: true } }, { multi: true } ) 
 	  	return true;
 	  },
 	  uncheckAll: function () {
-	  	EventEntries.update( {}, { $set: { checked: false } }, { multi: true } ) 
+	  	EventEntries.update( { caseID: Session.get("caseID") }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
 	  }
 	});
+
+  Meteor.publish("timelineData", function (caseID) {
+    check(caseID, String);
+    return EventEntries.find({caseID: caseID});
+  });
+
+
+
+
 
 }

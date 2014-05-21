@@ -3,26 +3,34 @@
 </head>
 
 <body>
-{{> editModal}}
-{{> removeModal}}
-{{> tagModal}}
-	<div class="entryListings">
-	<!-- <span id="pageTitle"><h2>Timeline of Key Events</h2></span> -->
-		{{> timeline}}
 
+
+</body>
+
+<template name="home">
+	<h1>Cases</h1>
+	{{#each Cases}}
+
+	<a href="{{pathFor 'timelineTemp'}}">{{caseNameShort}}</a><br/>
+	{{/each}}
+</template>
+
+<template name="timelineTemp">
+	{{> editModal}}
+	{{> removeModal}}
+	{{> tagModal}}
+	<div class="entryListings">
+		{{> timeline}}
 		<div id="controlKit" class=".container">
 			{{> newEventForm}}
 			<div style="clear: all;"></div>
 			{{> EventList}}
 			{{> settingsPane}}
 			<div style="clear: right;"></div>
-			{{> tagList}}
-						
+			{{> tagList}}			
    		</div>
   	</div>	
-
-</body>
-
+</template>
 
 <template name="timeline">
 	<div id="timelineBox" style="height: {{boxHeight}}px">
