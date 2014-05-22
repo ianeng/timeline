@@ -8,11 +8,11 @@ html {
 	padding: 30px;
 }
 
-#eventList {
+/*#eventList {
 	float: left;
 	width: 70%;
 	margin-top: 30px;
-}
+}*/
 
 .tagTitle {
 	margin-bottom: 10px;
@@ -76,20 +76,20 @@ html {
 
 
 .slider {
-	width: 270px;
+	width: 220px;
 }
 .datepicker {
 	z-index: 2000 !important;
 }
 
-#settingsPane {
+/*#settingsPane {
 	float: right;
-}
+}*/
 
-.panel {
+/*.panel {
 	float: right;
 	width: 300px;
-}
+}*/
 
 #editButtonBox {
 	padding-top: 15px;
@@ -115,7 +115,7 @@ html {
 
 .tagButtons {
 	position: absolute;
-	width: 90px;
+	width: 80px;
 	right: 0px;
 	vertical-align: middle;
 }

@@ -594,7 +594,10 @@ if (Meteor.isServer) {
 
   Meteor.publish("timelineData", function (caseID) {
     check(caseID, String);
-    return EventEntries.find({ caseID: caseID });
+    return [
+      EventEntries.find({ caseID: caseID }),
+      Cases.find({ _id: caseID })
+    ]
   });
 
   Meteor.publish("caseList", function () {
