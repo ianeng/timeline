@@ -65,6 +65,7 @@
 			{{> settingsPane}}
 			<div style="clear: right;"></div>
 			{{> tagList}}
+			{{> usersPane}}
 			</div>
 			</div>			
    		</div>
@@ -107,20 +108,13 @@
 <template name="newEventForm">
 	<form class="form-inline" role="form">
 		<h4>Add event to timeline</h4>
-	  <span class="form-group">
-	    <input type="text" class="form-control" id="eventTitle" placeholder="Event title">
-	  </span>
-	  <span class="form-group">
-	    <input type="text" class="form-control" id="subTitle" placeholder="Subtitle">
-	  </span>
-	  <span class="form-group">
-			<input type="text" class="form-control" id="datePicker" placeholder="Date">
-	  </span>
-	   <span class="form-group">
-	    <input type="text" class="form-control" id="tagsList" placeholder="Tags">
-	  </span>
-		<button type="button" class="btn btn-default">Add</button>
+		<input type="text" class="form-control" id="eventTitle" placeholder="Event title">
+		<input type="text" class="form-control" id="subTitle" placeholder="Subtitle">
+		<input type="text" class="form-control" id="datePicker" placeholder="Date">
+		<input type="text" class="form-control" id="tagsList" placeholder="Tags">
+		<button type="button" class="btn btn-default">+</button>
 	</form>
+	<br>
 </template>
 
 <template name="EventList">
@@ -220,6 +214,15 @@
 			    <input type="text" id="divWidthSlider" class="slider" value="" data-slider-value="{{entryDivWidth}}">
 			  </div>
 			</form>
+  		</div>
+	</div>
+</template>
+
+<template name="usersPane">
+	<div class="panel panel-default">
+  		<div class="panel-heading">Users</div>
+  		<div class="panel-body">
+  			{{getUserEmail owner}}
   		</div>
 	</div>
 </template>

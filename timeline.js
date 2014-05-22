@@ -313,6 +313,10 @@ if (Meteor.isClient) {
     });
   }
 
+  Template.usersPane.users = function () {
+    return Cases.find({ _id: Session.get("caseID") })
+  }
+
   Template.editModal.editEventTitle = function () {
     return Session.get("editEventTitle");
   }
@@ -431,6 +435,11 @@ if (Meteor.isClient) {
 
       	return Session.get("yAxisOffset") - topOffset + 16;
   });
+
+  UI.registerHelper("getUserEmail", function (userID) {
+    return Meteor.call('getEmailFromID');
+  });
+
 
   function dateDif(date1, date2) {    
     return Math.abs(date1.getTime() - date2.getTime());
@@ -589,7 +598,11 @@ if (Meteor.isServer) {
 	  uncheckAll: function (caseID) {
 	  	EventEntries.update( { caseID: caseID }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
-	  }
+	  },
+    getEmailFromID: function () {
+      // var userEmail = Meteor.users.find({ _id: userID });
+      return "Test";
+    }
 	});
 
   Meteor.publish("timelineData", function (caseID) {
