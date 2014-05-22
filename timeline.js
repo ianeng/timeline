@@ -1,18 +1,23 @@
 EventEntries = new Meteor.Collection('EventEntries');
-AppSettings = new Meteor.Collection('AppSettings');
+// AppSettings = new Meteor.Collection('AppSettings');
 Cases = new Meteor.Collection('Cases');
 
-// AppSettings.remove({});
+// Cases.remove({});
 
 Router.map(function() {
-  this.route('home', {path: '/'})
+  this.route('home', {
+    path: '/',
+    waitOn: function () { return Meteor.subscribe("caseList"); }
+  });
   this.route('timelineTemp', {
     path: '/timeline/:_id',
+    waitOn: function () { return Meteor.subscribe('timelineData', this.params._id); },
     data: function() { 
       Session.set("caseID", this.params._id);
-      return Cases.findOne({_id: this.params._id
-    }); }
-    // waitOn: function () { return Meteor.subscribe('caseID', this.params.caseID)}
+      Session.set("controlKitShow", false);
+      return Cases.findOne({_id: this.params._id}); 
+    }
+    
   });
 });
 
@@ -31,7 +36,24 @@ if (Meteor.isClient) {
   Template.home.Cases = function () {
     return Cases.find({});
   }
+  Template.home.events({
+    'click #showCreateCaseModal': function () {
+       $("#addCaseModal").modal("show");
+    }
+  });
 
+  Template.addCaseModal.events({
+    'click #addCaseButton': function () {
+      var caseTitle = document.getElementById('caseTitle').value;
+      check(caseTitle, String);
+      Cases.insert({
+        caseNameShort: caseTitle,
+        owner: Meteor.userId(),
+        invited: []
+      });
+      $("#addCaseModal").modal("hide");
+    }
+  });
 
   Template.timelineTemp.rendered = function () {
     newWindowSize();
@@ -42,8 +64,7 @@ if (Meteor.isClient) {
   }
 
   Template.timeline.EventEntries = function () {
-    console.log(this._id)
-    return EventEntries.find({ checked: true, caseID: this._id, eventDate: {$gte: Session.get("beginTimeline"), $lt: Session.get("endTimeline")}}, { sort: { eventDate: 1 }});
+    return EventEntries.find({ checked: true, caseID: Session.get("caseID"), eventDate: {$gte: Session.get("beginTimeline"), $lt: Session.get("endTimeline")}}, { sort: { eventDate: 1 }});
   }
 
   Template.timeline.rendered = function () {
@@ -179,7 +200,7 @@ if (Meteor.isClient) {
           eventTags: tagArray,
           timeStamp: Date.now(), 
           checked: false,
-          caseID: this._id
+          caseID: Session.get("caseID"), 
         });
 
         eventTitle.value = '';
@@ -192,7 +213,7 @@ if (Meteor.isClient) {
   });
 
   Template.EventList.Events = function () {
-    return EventEntries.find({ caseID: this._id }, { sort: { eventDate: 1, timeStamp: 1 }})
+    return EventEntries.find({ caseID: Session.get("caseID") }, { sort: { eventDate: 1, timeStamp: 1 }})
   
   }
   Template.EventList.checked = function () {
@@ -237,19 +258,19 @@ if (Meteor.isClient) {
   Template.tagList.events({
     'click #addTagButton': function(event) {
     	if (this) {
-        	Meteor.call("checkTag", this.toString());
+        	Meteor.call("checkTag", this.toString(), Session.get("caseID"));
         }
     }, 
     'click #removeTagButton': function(event) {
     	if (this) {
-        	Meteor.call("uncheckTag", this.toString());
+        	Meteor.call("uncheckTag", this.toString(), Session.get("caseID"));
         }
     },
     'click #addAllButton': function(event) {
-        Meteor.call("checkAll");
+        Meteor.call("checkAll", Session.get("caseID"));
     }, 
     'click #removeAllButton': function(event) {
-        Meteor.call("uncheckAll");
+        Meteor.call("uncheckAll", Session.get("caseID"));
     },
     'click .tagName': function (event) {
     	console.log(this.toString());
@@ -553,31 +574,30 @@ if (Meteor.isServer) {
 
 
 	Meteor.methods({
-	  checkTag: function (tagName) {
-	    EventEntries.update( { caseID: Session.get("caseID"), eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
+	  checkTag: function (tagName, caseID) {
+	    EventEntries.update( { caseID: caseID, eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
 	    return true;
 	  }, 
-	  uncheckTag: function (tagName) {
-	  	EventEntries.update( { caseID: Session.get("caseID"), eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
+	  uncheckTag: function (tagName, caseID) {
+	  	EventEntries.update( { caseID: caseID, eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
 	  }, 
-	  checkAll: function () {
-	  	EventEntries.update( { caseID: Session.get("caseID") }, { $set: { checked: true } }, { multi: true } ) 
+	  checkAll: function (caseID) {
+	  	EventEntries.update( { caseID: caseID }, { $set: { checked: true } }, { multi: true } ) 
 	  	return true;
 	  },
-	  uncheckAll: function () {
-	  	EventEntries.update( { caseID: Session.get("caseID") }, { $set: { checked: false } }, { multi: true } ) 
+	  uncheckAll: function (caseID) {
+	  	EventEntries.update( { caseID: caseID }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
 	  }
 	});
 
   Meteor.publish("timelineData", function (caseID) {
     check(caseID, String);
-    return EventEntries.find({caseID: caseID});
+    return EventEntries.find({ caseID: caseID });
   });
 
-
-
-
+  Meteor.publish("caseList", function () {
+    return Cases.find({ $or: [ { invited: this.userId }, { owner: this.userId } ] }); });
 
 }

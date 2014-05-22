@@ -5,14 +5,47 @@
 <body>
 
 
+
 </body>
 
 <template name="home">
-	<h1>Cases</h1>
-	{{#each Cases}}
+{{> addCaseModal}}
+	<div class="container">
+		<div class="row">
+			<div class="col-md-4"></div>
+		  	<div class="col-md-4">
+		  	<br/>
+		  	<div class="row">
+		  		<div class="col-md-5">
+		  			<h1>Timelines</h1>
+		  		</div>
+		  		<div class="col-md-7" style="padding-top: 38px; text-align: right;">
+		  			{{> loginButtons}}
+		  		</div>
 
-	<a href="{{pathFor 'timelineTemp'}}">{{caseNameShort}}</a><br/>
-	{{/each}}
+		  		</div>
+		  		<br>
+			  	<ul class="list-group">
+			  	{{#each Cases}}
+				  	<li class="list-group-item">
+				    	<!-- <span class="badge">14</span> -->
+						
+						<a href="{{pathFor 'timelineTemp'}}">{{caseNameShort}}</a><br/>
+				  </li>
+				  {{/each}}	
+				</ul>
+						<button type="button" class="btn btn-default btn-lg btn-block" id="showCreateCaseModal">
+	  		<span class="glyphicon glyphicon-plus"></span> New timeline
+		</button>
+			</div>
+		  <div class="col-md-4"></div>
+		</div>
+		
+		
+
+
+
+	</div>
 </template>
 
 <template name="timelineTemp">
@@ -281,6 +314,32 @@
       			</div>
       			<div class="modal-footer">
         			<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+      			</div>
+    		</div>
+  		</div>
+  	</div>
+
+</template>
+
+<template name="addCaseModal">
+	<div class="modal fade" id="addCaseModal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-md">
+    		<div class="modal-content">
+      			<div class="modal-header">
+        			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        			<h4 class="modal-title" id="myModalLabel">Create a new timeline</h4>
+      			</div>
+      			<div class="modal-body">
+					<form class="form-inline" role="form">
+						<h6>New timeline details</h6>
+					  	<span class="form-group">
+					    	<input type="text" class="form-control" id="caseTitle" placeholder="Short case title">
+					  	</span>
+					</form>
+      			</div>
+      			<div class="modal-footer">
+        			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        			<button id="addCaseButton" type="button" class="btn btn-primary">Create</button>
       			</div>
     		</div>
   		</div>
