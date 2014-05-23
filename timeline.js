@@ -7,12 +7,16 @@ Cases = new Meteor.Collection('Cases');
 Router.map(function() {
   this.route('home', {
     path: '/',
-    waitOn: function () { return Meteor.subscribe("caseList"); }
+    waitOn: function () { 
+      Session.set("currentPage", "home");
+      return Meteor.subscribe("caseList"); 
+    }
   });
   this.route('timelineTemp', {
     path: '/timeline/:_id',
     waitOn: function () { return Meteor.subscribe('timelineData', this.params._id); },
     data: function() { 
+      Session.set("currentPage", "timeline");
       Session.set("caseID", this.params._id);
       Session.set("controlKitShow", false);
       return Cases.findOne({_id: this.params._id}); 
@@ -21,6 +25,11 @@ Router.map(function() {
   });
 });
 
+Router.configure({
+  // layoutTemplate: 'layout',
+  // notFoundTemplate: 'notFound',
+  loadingTemplate: 'loading'
+});
 
 
 if (Meteor.isClient) {
@@ -34,26 +43,67 @@ if (Meteor.isClient) {
   Session.set("checkedTags", "")
 
   Template.home.Cases = function () {
-    return Cases.find({});
+    return Cases.find({}, { sort: { _id: 1 }});
   }
   Template.home.events({
     'click #showCreateCaseModal': function () {
-       $("#addCaseModal").modal("show");
-    }
+      if ($('#showCreateCaseModal').attr("data-function") == "addTimeline") {
+        var timelineTitle = $('#newTimelineInput').val();
+        check(timelineTitle, String);
+        if (timelineTitle.length > 0) {
+          Cases.insert({
+            caseNameShort: timelineTitle,
+            owner: Meteor.userId(),
+            invited: [],
+            backColor: "#ffffff",
+            dateColor: "#616161",
+            lineColor: "#bababa",
+            subtitleColor: "#7a9bc2",
+            titleColor: "#0066ff",
+            yAxisOffset: 400
+          });
+        }
+        $('#showCreateCaseModal').animate({
+          width: "99%"
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span> New timeline").attr("data-function", "");
+        $('#newTimelineInput').animate({
+          opacity: 0,
+          width: 0,
+          padding: 0
+        }, 100).val("");
+
+      } else {
+        $('#showCreateCaseModal').animate({
+          width: 50
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span>").attr("data-function", "addTimeline");
+        $('#newTimelineInput').animate({
+          opacity: 1,
+          width: "82%",
+          padding: 15
+        }).focus();
+
+      }
+    }, 
+    'click #removeCaseButton': function () {
+      Session.set("removeCaseTitle", this.caseNameShort);
+      Session.set("removeCaseID", this._id);
+
+      $("#removeCaseModal").modal("show");
+      },     
   });
 
-  Template.addCaseModal.events({
-    'click #addCaseButton': function () {
-      var caseTitle = document.getElementById('caseTitle').value;
-      check(caseTitle, String);
-      Cases.insert({
-        caseNameShort: caseTitle,
-        owner: Meteor.userId(),
-        invited: []
-      });
-      $("#addCaseModal").modal("hide");
-    }
-  });
+  // Template.addCaseModal.events({
+  //   'click #addCaseButton': function () {
+  //     var caseTitle = document.getElementById('caseTitle').value;
+  //     check(caseTitle, String);
+  //     Cases.insert({
+  //       caseNameShort: caseTitle,
+  //       owner: Meteor.userId(),
+  //       invited: []
+  //     });
+  //     $("#addCaseModal").modal("hide");
+  //   }
+  // });
 
   Template.timelineTemp.rendered = function () {
     newWindowSize();
@@ -311,11 +361,98 @@ if (Meteor.isClient) {
       var slideVal = slideEvt.value;
       Cases.update({ _id: Session.get("caseID") }, { $set: { divWidth: slideVal } });
     });
+    $('#bgColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { backColor: ev.color.toHex() } });
+      // $('body').css('background-color', ev.color.toHex() );
+    });
+    $('#lineColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { lineColor: ev.color.toHex() } });
+    });
+    $('#dateColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { dateColor: ev.color.toHex() } });
+    });
+    $('#titleColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { titleColor: ev.color.toHex() } });
+    });
+    $('#subtitleColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { subtitleColor: ev.color.toHex() } });
+    });
   }
+
+  Template.settingsPane.events({
+    'click #slideOpenSettings': function () {
+      if ($('#settingsButtonText').text() == "Show more") {
+        $('#stylePicker').show("slow");
+        $('#settingsButtonText').text("Show less");
+      } else if ($('#settingsButtonText').text() == "Show less") {
+        $('#stylePicker').hide("slow");
+        $('#settingsButtonText').text("Show more");
+      }
+      // $('#stylePicker').toggle(function() {
+      //     console.log("Open sesame")
+      //     // $('#settingsButtonText').text("Show less");
+      //   }, function() {
+      //     console.log("closed")
+      //     // $('#settingsButtonText').text("Show more");
+      //   });
+      // $('#slideOpenSettingsText').text("Show less");
+    }, 
+    'click #resetSettings': function () {
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          backColor: "#ffffff",
+          dateColor: "#616161",
+          lineColor: "#bababa",
+          subtitleColor: "#7a9bc2",
+          titleColor: "#0066ff",
+          yAxisOffset: 400
+        }
+      });
+    }
+  });
 
   Template.usersPane.users = function () {
     return Cases.find({ _id: Session.get("caseID") })
   }
+  Template.usersPane.events({
+    'click #addUserButton': function () {
+      if ($('#addUserButton').attr("data-function") == "addUser") {
+        var inviteEmail = $('#inviteUserInput').val();
+        check(inviteEmail, String);
+        if (inviteEmail.length > 0) {
+          Cases.update({ 
+            _id: Session.get("caseID") 
+          }, {
+            $push: {
+              invited: inviteEmail
+            }
+          });
+        }
+        $('#addUserButton').animate({
+          width: "99%"
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span> Invite user").attr("data-function", "");
+        $('#inviteUserInput').animate({
+          opacity: 0,
+          width: "0%",
+          padding: 0
+        }, 100).val("");
+
+      } else {
+        $('#addUserButton').animate({
+          width: "15%"
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span>").attr("data-function", "addUser");
+        $('#inviteUserInput').animate({
+          opacity: 1,
+          width: "80%",
+          padding: 15
+        }).focus();
+
+      }
+    }
+  });
+
 
   Template.editModal.editEventTitle = function () {
     return Session.get("editEventTitle");
@@ -385,6 +522,17 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.removeCaseModal.removeCaseTitle = function () {
+    return Session.get("removeCaseTitle");
+  }
+
+    Template.removeCaseModal.events({
+    'click #confirmRemove': function () {
+      Cases.remove(Session.get("removeCaseID"));  
+      $("#removeCaseModal").modal("hide");
+    }
+  });
+
 	Template.tagModal.tagName = function () {
 		return Session.get("tagModalTag");
 	}
@@ -438,6 +586,19 @@ if (Meteor.isClient) {
 
   UI.registerHelper("getUserEmail", function (userID) {
     return Meteor.call('getEmailFromID');
+  });
+
+  UI.registerHelper("getLineColor", function () {
+    return Session.get("lineColor");
+  });
+  UI.registerHelper("getDateColor", function () {
+    return Session.get("dateColor");
+  });
+  UI.registerHelper("getTitleColor", function () {
+    return Session.get("titleColor");
+  });
+  UI.registerHelper("getSubtitleColor", function () {
+    return Session.get("subtitleColor");
   });
 
 
@@ -531,7 +692,24 @@ if (Meteor.isClient) {
 			if (appSettingsQuery[0].divWidth) { Session.set("divWidth", appSettingsQuery[0].divWidth) };
 			if (appSettingsQuery[0].entryDivWidth) { Session.set("entryDivWidth", appSettingsQuery[0].entryDivWidth) };
 			if (appSettingsQuery[0].checkedTags) { Session.set("checkedTags", appSettingsQuery[0].checkedTags) };
-	  	} 
+      if (appSettingsQuery[0].backColor) { Session.set("backColor", appSettingsQuery[0].backColor) };
+      if (appSettingsQuery[0].lineColor) { Session.set("lineColor", appSettingsQuery[0].lineColor) };
+      if (appSettingsQuery[0].dateColor) { Session.set("dateColor", appSettingsQuery[0].dateColor) };
+      if (appSettingsQuery[0].titleColor) { Session.set("titleColor", appSettingsQuery[0].titleColor) };
+      if (appSettingsQuery[0].subtitleColor) { Session.set("subtitleColor", appSettingsQuery[0].subtitleColor) };
+	  }
+
+    var backColor = Session.get("backColor");
+
+    if (Session.get("currentPage") == "timeline") {
+      $('body').css('background-color', backColor );
+    } else {
+      $('body').css('background-color', "#ffffff" );
+    }
+
+    // var lineColor = Session.get("lineColor");
+    // $('.lineColor').css({ 'border-color': lineColor });
+
       // else {
 	     //  AppSettings.insert({
 	     //    yAxisOffset: 578,
