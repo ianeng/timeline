@@ -1,21 +1,35 @@
 EventEntries = new Meteor.Collection('EventEntries');
-AppSettings = new Meteor.Collection('AppSettings');
+// AppSettings = new Meteor.Collection('AppSettings');
 Cases = new Meteor.Collection('Cases');
 
-// AppSettings.remove({});
+// Cases.remove({});
 
 Router.map(function() {
-  this.route('home', {path: '/'})
+  this.route('home', {
+    path: '/',
+    waitOn: function () { 
+      Session.set("currentPage", "home");
+      return Meteor.subscribe("caseList"); 
+    }
+  });
   this.route('timelineTemp', {
     path: '/timeline/:_id',
+    waitOn: function () { return Meteor.subscribe('timelineData', this.params._id); },
     data: function() { 
+      Session.set("currentPage", "timeline");
       Session.set("caseID", this.params._id);
-      return Cases.findOne({_id: this.params._id
-    }); }
-    // waitOn: function () { return Meteor.subscribe('caseID', this.params.caseID)}
+      Session.set("controlKitShow", false);
+      return Cases.findOne({_id: this.params._id}); 
+    }
+    
   });
 });
 
+Router.configure({
+  // layoutTemplate: 'layout',
+  // notFoundTemplate: 'notFound',
+  loadingTemplate: 'loading'
+});
 
 
 if (Meteor.isClient) {
@@ -29,9 +43,67 @@ if (Meteor.isClient) {
   Session.set("checkedTags", "")
 
   Template.home.Cases = function () {
-    return Cases.find({});
+    return Cases.find({}, { sort: { _id: 1 }});
   }
+  Template.home.events({
+    'click #showCreateCaseModal': function () {
+      if ($('#showCreateCaseModal').attr("data-function") == "addTimeline") {
+        var timelineTitle = $('#newTimelineInput').val();
+        check(timelineTitle, String);
+        if (timelineTitle.length > 0) {
+          Cases.insert({
+            caseNameShort: timelineTitle,
+            owner: Meteor.userId(),
+            invited: [],
+            backColor: "#ffffff",
+            dateColor: "#616161",
+            lineColor: "#bababa",
+            subtitleColor: "#7a9bc2",
+            titleColor: "#0066ff",
+            yAxisOffset: 400
+          });
+        }
+        $('#showCreateCaseModal').animate({
+          width: "99%"
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span> New timeline").attr("data-function", "");
+        $('#newTimelineInput').animate({
+          opacity: 0,
+          width: 0,
+          padding: 0
+        }, 100).val("");
 
+      } else {
+        $('#showCreateCaseModal').animate({
+          width: 50
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span>").attr("data-function", "addTimeline");
+        $('#newTimelineInput').animate({
+          opacity: 1,
+          width: "82%",
+          padding: 15
+        }).focus();
+
+      }
+    }, 
+    'click #removeCaseButton': function () {
+      Session.set("removeCaseTitle", this.caseNameShort);
+      Session.set("removeCaseID", this._id);
+
+      $("#removeCaseModal").modal("show");
+      },     
+  });
+
+  // Template.addCaseModal.events({
+  //   'click #addCaseButton': function () {
+  //     var caseTitle = document.getElementById('caseTitle').value;
+  //     check(caseTitle, String);
+  //     Cases.insert({
+  //       caseNameShort: caseTitle,
+  //       owner: Meteor.userId(),
+  //       invited: []
+  //     });
+  //     $("#addCaseModal").modal("hide");
+  //   }
+  // });
 
   Template.timelineTemp.rendered = function () {
     newWindowSize();
@@ -42,8 +114,7 @@ if (Meteor.isClient) {
   }
 
   Template.timeline.EventEntries = function () {
-    console.log(this._id)
-    return EventEntries.find({ checked: true, caseID: this._id, eventDate: {$gte: Session.get("beginTimeline"), $lt: Session.get("endTimeline")}}, { sort: { eventDate: 1 }});
+    return EventEntries.find({ checked: true, caseID: Session.get("caseID"), eventDate: {$gte: Session.get("beginTimeline"), $lt: Session.get("endTimeline")}}, { sort: { eventDate: 1 }});
   }
 
   Template.timeline.rendered = function () {
@@ -179,7 +250,7 @@ if (Meteor.isClient) {
           eventTags: tagArray,
           timeStamp: Date.now(), 
           checked: false,
-          caseID: this._id
+          caseID: Session.get("caseID"), 
         });
 
         eventTitle.value = '';
@@ -192,7 +263,7 @@ if (Meteor.isClient) {
   });
 
   Template.EventList.Events = function () {
-    return EventEntries.find({ caseID: this._id }, { sort: { eventDate: 1, timeStamp: 1 }})
+    return EventEntries.find({ caseID: Session.get("caseID") }, { sort: { eventDate: 1, timeStamp: 1 }})
   
   }
   Template.EventList.checked = function () {
@@ -237,19 +308,19 @@ if (Meteor.isClient) {
   Template.tagList.events({
     'click #addTagButton': function(event) {
     	if (this) {
-        	Meteor.call("checkTag", this.toString());
+        	Meteor.call("checkTag", this.toString(), Session.get("caseID"));
         }
     }, 
     'click #removeTagButton': function(event) {
     	if (this) {
-        	Meteor.call("uncheckTag", this.toString());
+        	Meteor.call("uncheckTag", this.toString(), Session.get("caseID"));
         }
     },
     'click #addAllButton': function(event) {
-        Meteor.call("checkAll");
+        Meteor.call("checkAll", Session.get("caseID"));
     }, 
     'click #removeAllButton': function(event) {
-        Meteor.call("uncheckAll");
+        Meteor.call("uncheckAll", Session.get("caseID"));
     },
     'click .tagName': function (event) {
     	console.log(this.toString());
@@ -290,7 +361,98 @@ if (Meteor.isClient) {
       var slideVal = slideEvt.value;
       Cases.update({ _id: Session.get("caseID") }, { $set: { divWidth: slideVal } });
     });
+    $('#bgColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { backColor: ev.color.toHex() } });
+      // $('body').css('background-color', ev.color.toHex() );
+    });
+    $('#lineColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { lineColor: ev.color.toHex() } });
+    });
+    $('#dateColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { dateColor: ev.color.toHex() } });
+    });
+    $('#titleColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { titleColor: ev.color.toHex() } });
+    });
+    $('#subtitleColor').colorpicker().on('changeColor', function(ev){
+      Cases.update({ _id: Session.get("caseID") }, { $set: { subtitleColor: ev.color.toHex() } });
+    });
   }
+
+  Template.settingsPane.events({
+    'click #slideOpenSettings': function () {
+      if ($('#settingsButtonText').text() == "Show more") {
+        $('#stylePicker').show("slow");
+        $('#settingsButtonText').text("Show less");
+      } else if ($('#settingsButtonText').text() == "Show less") {
+        $('#stylePicker').hide("slow");
+        $('#settingsButtonText').text("Show more");
+      }
+      // $('#stylePicker').toggle(function() {
+      //     console.log("Open sesame")
+      //     // $('#settingsButtonText').text("Show less");
+      //   }, function() {
+      //     console.log("closed")
+      //     // $('#settingsButtonText').text("Show more");
+      //   });
+      // $('#slideOpenSettingsText').text("Show less");
+    }, 
+    'click #resetSettings': function () {
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          backColor: "#ffffff",
+          dateColor: "#616161",
+          lineColor: "#bababa",
+          subtitleColor: "#7a9bc2",
+          titleColor: "#0066ff",
+          yAxisOffset: 400
+        }
+      });
+    }
+  });
+
+  Template.usersPane.users = function () {
+    return Cases.find({ _id: Session.get("caseID") })
+  }
+  Template.usersPane.events({
+    'click #addUserButton': function () {
+      if ($('#addUserButton').attr("data-function") == "addUser") {
+        var inviteEmail = $('#inviteUserInput').val();
+        check(inviteEmail, String);
+        if (inviteEmail.length > 0) {
+          Cases.update({ 
+            _id: Session.get("caseID") 
+          }, {
+            $push: {
+              invited: inviteEmail
+            }
+          });
+        }
+        $('#addUserButton').animate({
+          width: "99%"
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span> Invite user").attr("data-function", "");
+        $('#inviteUserInput').animate({
+          opacity: 0,
+          width: "0%",
+          padding: 0
+        }, 100).val("");
+
+      } else {
+        $('#addUserButton').animate({
+          width: "15%"
+        }, 300).html("<span class=\"glyphicon glyphicon-plus\"></span>").attr("data-function", "addUser");
+        $('#inviteUserInput').animate({
+          opacity: 1,
+          width: "80%",
+          padding: 15
+        }).focus();
+
+      }
+    }
+  });
+
 
   Template.editModal.editEventTitle = function () {
     return Session.get("editEventTitle");
@@ -360,6 +522,17 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.removeCaseModal.removeCaseTitle = function () {
+    return Session.get("removeCaseTitle");
+  }
+
+    Template.removeCaseModal.events({
+    'click #confirmRemove': function () {
+      Cases.remove(Session.get("removeCaseID"));  
+      $("#removeCaseModal").modal("hide");
+    }
+  });
+
 	Template.tagModal.tagName = function () {
 		return Session.get("tagModalTag");
 	}
@@ -410,6 +583,24 @@ if (Meteor.isClient) {
 
       	return Session.get("yAxisOffset") - topOffset + 16;
   });
+
+  UI.registerHelper("getUserEmail", function (userID) {
+    return Meteor.call('getEmailFromID');
+  });
+
+  UI.registerHelper("getLineColor", function () {
+    return Session.get("lineColor");
+  });
+  UI.registerHelper("getDateColor", function () {
+    return Session.get("dateColor");
+  });
+  UI.registerHelper("getTitleColor", function () {
+    return Session.get("titleColor");
+  });
+  UI.registerHelper("getSubtitleColor", function () {
+    return Session.get("subtitleColor");
+  });
+
 
   function dateDif(date1, date2) {    
     return Math.abs(date1.getTime() - date2.getTime());
@@ -501,7 +692,24 @@ if (Meteor.isClient) {
 			if (appSettingsQuery[0].divWidth) { Session.set("divWidth", appSettingsQuery[0].divWidth) };
 			if (appSettingsQuery[0].entryDivWidth) { Session.set("entryDivWidth", appSettingsQuery[0].entryDivWidth) };
 			if (appSettingsQuery[0].checkedTags) { Session.set("checkedTags", appSettingsQuery[0].checkedTags) };
-	  	} 
+      if (appSettingsQuery[0].backColor) { Session.set("backColor", appSettingsQuery[0].backColor) };
+      if (appSettingsQuery[0].lineColor) { Session.set("lineColor", appSettingsQuery[0].lineColor) };
+      if (appSettingsQuery[0].dateColor) { Session.set("dateColor", appSettingsQuery[0].dateColor) };
+      if (appSettingsQuery[0].titleColor) { Session.set("titleColor", appSettingsQuery[0].titleColor) };
+      if (appSettingsQuery[0].subtitleColor) { Session.set("subtitleColor", appSettingsQuery[0].subtitleColor) };
+	  }
+
+    var backColor = Session.get("backColor");
+
+    if (Session.get("currentPage") == "timeline") {
+      $('body').css('background-color', backColor );
+    } else {
+      $('body').css('background-color', "#ffffff" );
+    }
+
+    // var lineColor = Session.get("lineColor");
+    // $('.lineColor').css({ 'border-color': lineColor });
+
       // else {
 	     //  AppSettings.insert({
 	     //    yAxisOffset: 578,
@@ -553,31 +761,37 @@ if (Meteor.isServer) {
 
 
 	Meteor.methods({
-	  checkTag: function (tagName) {
-	    EventEntries.update( { caseID: Session.get("caseID"), eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
+	  checkTag: function (tagName, caseID) {
+	    EventEntries.update( { caseID: caseID, eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
 	    return true;
 	  }, 
-	  uncheckTag: function (tagName) {
-	  	EventEntries.update( { caseID: Session.get("caseID"), eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
+	  uncheckTag: function (tagName, caseID) {
+	  	EventEntries.update( { caseID: caseID, eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
 	  }, 
-	  checkAll: function () {
-	  	EventEntries.update( { caseID: Session.get("caseID") }, { $set: { checked: true } }, { multi: true } ) 
+	  checkAll: function (caseID) {
+	  	EventEntries.update( { caseID: caseID }, { $set: { checked: true } }, { multi: true } ) 
 	  	return true;
 	  },
-	  uncheckAll: function () {
-	  	EventEntries.update( { caseID: Session.get("caseID") }, { $set: { checked: false } }, { multi: true } ) 
+	  uncheckAll: function (caseID) {
+	  	EventEntries.update( { caseID: caseID }, { $set: { checked: false } }, { multi: true } ) 
 	  	return true;
-	  }
+	  },
+    getEmailFromID: function () {
+      // var userEmail = Meteor.users.find({ _id: userID });
+      return "Test";
+    }
 	});
 
   Meteor.publish("timelineData", function (caseID) {
     check(caseID, String);
-    return EventEntries.find({caseID: caseID});
+    return [
+      EventEntries.find({ caseID: caseID }),
+      Cases.find({ _id: caseID })
+    ]
   });
 
-
-
-
+  Meteor.publish("caseList", function () {
+    return Cases.find({ $or: [ { invited: this.userId }, { owner: this.userId } ] }); });
 
 }

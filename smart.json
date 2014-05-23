@@ -5,6 +5,7 @@
     "bootstrap3-slider-touch": {},
     "select2-bootstrap3-css": {},
     "select2": {},
-    "iron-router": {}
+    "iron-router": {},
+    "bootstrap-colorpicker": {}
   }
 }

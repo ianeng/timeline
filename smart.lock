@@ -7,7 +7,8 @@
       "bootstrap3-slider-touch": {},
       "select2-bootstrap3-css": {},
       "select2": {},
-      "iron-router": {}
+      "iron-router": {},
+      "bootstrap-colorpicker": {}
     },
     "packages": {
       "bootstrap3-datepicker": {
@@ -39,6 +40,11 @@
         "git": "https://github.com/EventedMind/iron-router.git",
         "tag": "v0.7.1",
         "commit": "d1ffb3f06ea4c112132b030f2eb1a70b81675ecb"
+      },
+      "bootstrap-colorpicker": {
+        "git": "https://github.com/nate-strauser/meteor-bootstrap-colorpicker.git",
+        "tag": "v0.1.0",
+        "commit": "d670a7bdc3c6104016a79190cc0280a4f6fe7329"
       },
       "blaze-layout": {
         "git": "https://github.com/EventedMind/blaze-layout.git",

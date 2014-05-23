@@ -4,15 +4,52 @@
 
 <body>
 
-
 </body>
 
 <template name="home">
-	<h1>Cases</h1>
-	{{#each Cases}}
+{{> addCaseModal}}
+{{> removeCaseModal}}
+	<div class="container">
+		<div class="row">
+			<div class="col-md-4"></div>
+		  	<div class="col-md-4">
+		  	<br/>
+		  	<div class="row">
+		  		<div class="col-md-5">
+		  			<h1>Timelines</h1>
+		  		</div>
+		  		<div class="col-md-7" style="padding-top: 38px; text-align: right;">
+		  			{{> loginButtons}}
+		  		</div>
 
-	<a href="{{pathFor 'timelineTemp'}}">{{caseNameShort}}</a><br/>
-	{{/each}}
+		  		</div>
+		  		<br>
+			  	<ul class="list-group">
+			  	{{#each Cases}}
+				  	<li class="list-group-item hoverList">
+				    	<!-- <span class="badge">14</span> -->
+						
+						<a href="{{pathFor 'timelineTemp'}}">{{caseNameShort}}</a>
+				  		<span class="floatButtons tagModal">
+		    				<button id="removeCaseButton" type="button" class="btn btn-default btn-xs"> <span class="glyphicon glyphicon-remove"></span> </button>
+		    			</span>
+
+				  </li>
+				  {{/each}}	
+				</ul>
+				<input type="text" class="form-control" id="newTimelineInput" placeholder="New timeline title">
+				<button type="button" class="btn btn-default btn-lg btn-block" id="showCreateCaseModal">
+	  				<span class="glyphicon glyphicon-plus"></span> New timeline
+				</button>
+			</div>
+		  <div class="col-md-4"></div>
+		</div>
+		
+		
+
+
+
+	</div>
 </template>
 
 <template name="timelineTemp">
@@ -21,13 +58,20 @@
 	{{> tagModal}}
 	<div class="entryListings">
 		{{> timeline}}
-		<div id="controlKit" class=".container">
+		<div id="controlKit" class="container">
+			<div class="row">
+			<div class="col-md-8">
 			{{> newEventForm}}
 			<div style="clear: all;"></div>
 			{{> EventList}}
+			</div>
+			<div class="col-md-3">
 			{{> settingsPane}}
 			<div style="clear: right;"></div>
-			{{> tagList}}			
+			{{> tagList}}
+			{{> usersPane}}
+			</div>
+			</div>			
    		</div>
   	</div>	
 </template>
@@ -47,8 +91,8 @@
 	</div>
 	<div id="axisLabelContainer">
 	{{#each axisLabels}}
-		<div class="axisLabel" style="width: {{axisWidth}}px">
-		{{axisYear}}
+		<div class="axisLabel" style="width: {{axisWidth}}px; border-color: {{getLineColor}}; color: {{getLineColor}};">
+			{{axisYear}}
 		</div>
 	{{/each}}
 	</div>
@@ -56,11 +100,11 @@
 
 
 <template name="timelineEvent">
-	<div class="timelineEvent" id="{{_id}}" style="left: {{leftOffset}}px; top: {{topOffset}}px; height: {{getLineLength topOffset}}px; width: {{divWidth}}px;"> 
+	<div class="timelineEvent lineColor" id="{{_id}}" style="left: {{leftOffset}}px; top: {{topOffset}}px; height: {{getLineLength topOffset}}px; width: {{divWidth}}px; border-color: {{getLineColor}};"> 
 		<div class="timelineText">
-			<h5>{{formatDate eventDate "short"}}</h5>
-			<h4>{{eventTitle}}</h4>
-			<h5><small>{{subTitle}}</small></h5>
+			<h5 style="color: {{getDateColor}}">{{formatDate eventDate "short"}}</h5>
+			<h4 style="color: {{getTitleColor}}">{{eventTitle}}</h4>
+			<h5><small style="color: {{getSubtitleColor}};">{{subTitle}}</small></h5>
 		</div>
 	</div>
 </template>
@@ -68,20 +112,13 @@
 <template name="newEventForm">
 	<form class="form-inline" role="form">
 		<h4>Add event to timeline</h4>
-	  <span class="form-group">
-	    <input type="text" class="form-control" id="eventTitle" placeholder="Event title">
-	  </span>
-	  <span class="form-group">
-	    <input type="text" class="form-control" id="subTitle" placeholder="Subtitle">
-	  </span>
-	  <span class="form-group">
-			<input type="text" class="form-control" id="datePicker" placeholder="Date">
-	  </span>
-	   <span class="form-group">
-	    <input type="text" class="form-control" id="tagsList" placeholder="Tags">
-	  </span>
-		<button type="button" class="btn btn-default">Add</button>
+		<input type="text" class="form-control" id="eventTitle" placeholder="Event title" style="width: 150px;">&nbsp;
+		<input type="text" class="form-control" id="subTitle" placeholder="Subtitle" style="width: 150px;">&nbsp;
+		<input type="text" class="form-control" id="datePicker" placeholder="Date" style="width: 150px;">&nbsp;
+		<input type="text" class="form-control" id="tagsList" placeholder="Tags" style="width: 150px;">&nbsp;
+		<button type="button" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
 	</form>
+	<br>
 </template>
 
 <template name="EventList">
@@ -95,7 +132,7 @@
 	  <!-- List group -->
 	  <ul class="list-group">
 	  		{{#each Events}}
-				<li class="list-group-item">
+				<li class="list-group-item hoverList">
 				<form class="form-inline" role="form"> 
 			  	
 			  			<label class="eventCheckbox">
@@ -142,18 +179,18 @@
 	<div class="panel panel-default" >
   		<div class="panel-heading">Tags</div>
   		<div class="panel-body">
-  			<div class="tagTitle">
+  			<div class="tagTitle hoverList">
     			All
-    			<span class="tagButtons">
+    			<span class="floatButtons tagButtons">
     				<button id="addAllButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
     				<button id="removeAllButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-minus"></span></button>
 				</span>
 			</div>
 
     		{{#each tags}}
-				<div class="tagTitle">
+				<div class="tagTitle hoverList">
 					<span class="tagName">{{.}}</span>
-					<span class="tagButtons">
+					<span class="floatButtons tagButtons">
 						<button id="addTagButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
 						<button id="removeTagButton" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-minus"></span></button>
 					</span>
@@ -164,12 +201,18 @@
 </template>
 
 <template name="settingsPane">
-	<div class="panel panel-default" style="margin-top: 30px;">
-  		<div class="panel-heading">Settings</div>
+	<div class="panel panel-default hoverList" style="margin-top: 30px;">
+  		<div class="panel-heading">
+  			Settings
+			<span class="floatButtons resetButton">
+				<button id="resetSettings" type="button" class="btn btn-default btn-xs"> Reset </button>
+			</span>
+
+  		</div>
   		<div class="panel-body">
     		<form role="form">
 			  <div class="form-group">
-			    <label for="offsetSlider">Height</label>
+			    <label for="offsetSlider">Height</label><br>
 			    <input type="text" id="offsetSlider" class="slider" value="" data-slider-value="{{yAxisOffset}}">
 			  </div>
 			  <div class="form-group">
@@ -177,10 +220,44 @@
 			    <input type="text" id="widthSlider" class="slider" value="" data-slider-value="{{divWidth}}">
 			  </div>
 			  <div class="form-group">
-			    <label for="divWidthSlider">Entry width</label>
+			    <label for="divWidthSlider">Entry width</label><br>
 			    <input type="text" id="divWidthSlider" class="slider" value="" data-slider-value="{{entryDivWidth}}">
 			  </div>
+
+			  <div id="stylePicker">
+				  <label for="bgColor">Background color</label><br>
+				  <input type="text" class="form-control" id="bgColor" style="background-color: {{backColor}}" />
+				  <label for="lineColor">Line color</label><br>
+				  <input type="text" class="form-control" id="lineColor" style="background-color: {{getLineColor}}" />
+				  <label for="dateColor">Date color</label><br>
+				  <input type="text" class="form-control" id="dateColor" style="background-color: {{getDateColor}}" />
+				  <label for="dateColor">Title color</label><br>
+				  <input type="text" class="form-control" id="titleColor" style="background-color: {{getTitleColor}}"/>
+				  <label for="subtitleColor">Subtitle color</label><br>
+				  <input type="text" class="form-control" id="subtitleColor" style="background-color: {{getSubtitleColor}}"/>
+				  <br>
+				</div>
+				<button type="button" class="btn btn-default btn-sm btn-block" id="slideOpenSettings">
+	  				<span id="settingsButtonText">Show more</span>
+				</button>
 			</form>
+  		</div>
+	</div>
+</template>
+
+<template name="usersPane">
+	<div class="panel panel-default">
+  		<div class="panel-heading">Users</div>
+  		<div class="panel-body">
+  			{{#each invited}}
+  				{{.}}<br><br>
+  			{{/each}}
+
+			<input type="text" class="form-control" id="inviteUserInput" placeholder="Email address to invite">
+			<button type="button" class="btn btn-default btn-sm btn-block" id="addUserButton">
+  				<span class="glyphicon glyphicon-plus"></span> Invite user
+			</button>
+
   		</div>
 	</div>
 </template>
@@ -243,6 +320,26 @@
   	</div>
 
 </template>
+<template name="removeCaseModal">
+	<div class="modal fade" id="removeCaseModal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-rg">
+    		<div class="modal-content">
+      			<div class="modal-header">
+        			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        			<h4 class="modal-title" id="myModalLabel">Remove {{removeCaseTitle}}?</h4>
+      			</div>
+      			<div class="modal-body">
+      			Are you sure you want to permanently delete {{removeCaseTitle}}?
+      			</div>
+      			<div class="modal-footer">
+        			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        			<button id="confirmRemove" type="button" class="btn btn-danger">Delete</button>
+      			</div>
+    		</div>
+  		</div>
+  	</div>
+
+</template>
 
 <template name="tagModal">
 	<div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -286,4 +383,34 @@
   		</div>
   	</div>
 
+</template>
+
+<template name="addCaseModal">
+	<div class="modal fade" id="addCaseModal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-md">
+    		<div class="modal-content">
+      			<div class="modal-header">
+        			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        			<h4 class="modal-title" id="myModalLabel">Create a new timeline</h4>
+      			</div>
+      			<div class="modal-body">
+					<form class="form-inline" role="form">
+						<h6>New timeline details</h6>
+					  	<span class="form-group">
+					    	<input type="text" class="form-control" id="caseTitle" placeholder="Short case title">
+					  	</span>
+					</form>
+      			</div>
+      			<div class="modal-footer">
+        			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        			<button id="addCaseButton" type="button" class="btn btn-primary">Create</button>
+      			</div>
+    		</div>
+  		</div>
+  	</div>
+
+</template>
+
+<template name="loading">
+	<center><img src="loading.gif"></center>
 </template>

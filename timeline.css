@@ -6,13 +6,17 @@ html {
 
 .entryListings {
 	padding: 30px;
+
+}
+.hoverList:hover .floatButtons {
+	opacity: 1;
 }
 
-#eventList {
+/*#eventList {
 	float: left;
 	width: 70%;
 	margin-top: 30px;
-}
+}*/
 
 .tagTitle {
 	margin-bottom: 10px;
@@ -41,6 +45,7 @@ html {
 	height: 115px;
 	padding-left: 8px;
 	top: 500px;
+	transition: all 1s ease;
 	/*bottom: 600px;*/
 	/*float: right;*/
 }
@@ -62,9 +67,9 @@ html {
 }
 
 .axisLabel {
-	 -moz-box-shadow:    0 0px 15px .1px #ccc;
+/*	 -moz-box-shadow:    0 0px 15px .1px #ccc;
   	-webkit-box-shadow: 0 0px 10px .1px #ccc;
-  	box-shadow:         0 0px 10px .1px #ccc;
+  	box-shadow:         0 0px 10px .1px #ccc;*/
 	border-top: 1px solid black;
 	border-right: 1px solid black;
 	text-align: center;
@@ -72,24 +77,25 @@ html {
 	display: inline-block;
 	white-space: normal;
 	overflow: hidden;
+	/*transition: all 0.1s ease;*/
 }
 
 
 .slider {
-	width: 270px;
+	width: 220px;
 }
 .datepicker {
 	z-index: 2000 !important;
 }
 
-#settingsPane {
+/*#settingsPane {
 	float: right;
-}
+}*/
 
-.panel {
+/*.panel {
 	float: right;
 	width: 300px;
-}
+}*/
 
 #editButtonBox {
 	padding-top: 15px;
@@ -106,20 +112,64 @@ html {
 	position: absolute;
 	width: 60px;
 	right: 0px;
-	vertical-align: middle;
+	opacity: 0;
+	transition: opacity .25s ease-in-out;
+   	-moz-transition: opacity .25s ease-in-out;
+   	-webkit-transition: opacity .25s ease-in-out;
+	/*vertical-align: middle;*/
 }
+
 
 .floatButtons.tagModal {
 	width: 35px;
 }
 
-.tagButtons {
-	position: absolute;
-	width: 90px;
-	right: 0px;
-	vertical-align: middle;
+.floatButtons.resetButton {
+	width: 70px;
+}
+.floatButtons.tagButtons {
+	width: 80px;
 }
 
 .tagTitle {
 	cursor: pointer;
+}
+#stylePicker {
+	display: none;
+}
+/*.lineColor {
+	border-color: white;
+}*/
+
+#showCreateCaseModal {
+	float: right;
+	display: inline;
+	width: 99%;
+}
+
+#newTimelineInput {
+	display: inline;
+	width: 0%;
+	height: 45px;
+	opacity: 0;
+	float: left;
+	padding: 0px;
+	margin: 0px;
+
+}
+
+#inviteUserInput {
+	display: inline;
+	width: 0%;
+	height: 30px;
+	opacity: 0;
+	float: left;
+	padding: 0px;
+	margin: 0px;
+
+}
+#addUserButton {
+	float: right;
+	display: inline;
+	width: 99%;
 }
