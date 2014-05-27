@@ -53,7 +53,7 @@ if (Meteor.isClient) {
         if (timelineTitle.length > 0) {
           Cases.insert({
             caseNameShort: timelineTitle,
-            owner: Meteor.userId(),
+            owner: Meteor.user().emails[0].address,
             invited: [],
             backColor: "#ffffff",
             dateColor: "#616161",
@@ -792,6 +792,9 @@ if (Meteor.isServer) {
   });
 
   Meteor.publish("caseList", function () {
-    return Cases.find({ $or: [ { invited: this.userId }, { owner: this.userId } ] }); });
+    var userEmail = Meteor.users.findOne({ _id: this.userId }).emails[0].address
+    return Cases.find({ $or: [ { invited: userEmail }, { owner: userEmail } ] });
+    // return Cases.find({ owner: userEmail }); 
+  });
 
 }
