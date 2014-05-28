@@ -1,38 +1,7 @@
 EventEntries = new Meteor.Collection('EventEntries');
-// AppSettings = new Meteor.Collection('AppSettings');
-Cases = new Meteor.Collection('Cases');
-
-// Cases.remove({});
-
-Router.map(function() {
-  this.route('home', {
-    path: '/',
-    waitOn: function () { 
-      Session.set("currentPage", "home");
-      return Meteor.subscribe("caseList"); 
-    }
-  });
-  this.route('timelineTemp', {
-    path: '/timeline/:_id',
-    waitOn: function () { return Meteor.subscribe('timelineData', this.params._id); },
-    data: function() { 
-      Session.set("currentPage", "timeline");
-      Session.set("caseID", this.params._id);
-      Session.set("controlKitShow", false);
-      return Cases.findOne({_id: this.params._id}); 
-    }
-    
-  });
-});
-
-Router.configure({
-  // layoutTemplate: 'layout',
-  // notFoundTemplate: 'notFound',
-  loadingTemplate: 'loading'
-});
+Cases = new Meteor.Collection('Cases'); 
 
 
-if (Meteor.isClient) {
 
   Session.set("beginTimeline", new Date(1998, 04, 01));
   Session.set("endTimeline", new Date(2013, 06, 01));
@@ -40,7 +9,6 @@ if (Meteor.isClient) {
   Session.set("yAxisOffset", 578);
   Session.set("entryDivWidth", 300);
   Session.set("divWidth", 300);
-  Session.set("checkedTags", "")
 
   Template.home.Cases = function () {
     return Cases.find({}, { sort: { _id: 1 }});
@@ -53,7 +21,7 @@ if (Meteor.isClient) {
         if (timelineTitle.length > 0) {
           Cases.insert({
             caseNameShort: timelineTitle,
-            owner: Meteor.userId(),
+            owner: Meteor.user().emails[0].address,
             invited: [],
             backColor: "#ffffff",
             dateColor: "#616161",
@@ -91,19 +59,6 @@ if (Meteor.isClient) {
       $("#removeCaseModal").modal("show");
       },     
   });
-
-  // Template.addCaseModal.events({
-  //   'click #addCaseButton': function () {
-  //     var caseTitle = document.getElementById('caseTitle').value;
-  //     check(caseTitle, String);
-  //     Cases.insert({
-  //       caseNameShort: caseTitle,
-  //       owner: Meteor.userId(),
-  //       invited: []
-  //     });
-  //     $("#addCaseModal").modal("hide");
-  //   }
-  // });
 
   Template.timelineTemp.rendered = function () {
     newWindowSize();
@@ -150,11 +105,16 @@ if (Meteor.isClient) {
   	var rsDate = dateOfRightSide(originalDate); 
   	var lsDate = dateOfLeftBuffer(originalDate);
 
-	var entriesInDateRange = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: rsDate }}, { sort: { eventDate: 1 }}).fetch(); 
-	if (entriesInDateRange.length > 1 ) {
-		var entriesAbove = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: originalDate }}, { sort: { eventDate: 1 }}).fetch();
-		var entriesBelow = EventEntries.find({ checked: true, eventDate: {$gte: originalDate, $lt: rsDate }}, { sort: { eventDate: 1 }}).fetch();
-		var posPercent = (entriesAbove.length + 1) / (entriesAbove.length + entriesBelow.length + 1)
+	var entriesInDateRange = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: rsDate }}, { sort: { eventDate: 1 }}).count(); 
+	if (entriesInDateRange > 1 ) {
+		var entriesAbove = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: originalDate }}).count();
+    var entriesEqual = EventEntries.find({ checked: true, eventDate: originalDate }).count();
+    if (entriesEqual > 1) {
+       var equalEntriesAbove = EventEntries.find({ checked: true, eventDate: originalDate, _id: { $gt: this._id } }).count(); 
+       entriesAbove = entriesAbove + equalEntriesAbove; 
+    }
+		var entriesBelow = EventEntries.find({ checked: true, eventDate: {$gte: originalDate, $lt: rsDate }}).count();
+		var posPercent = (entriesAbove + 1) / (entriesInDateRange + 1)
 		var topOffset = posPercent * Session.get("yAxisOffset");
 	} else {
 		var topOffset = 0.5 * Session.get("yAxisOffset");
@@ -166,6 +126,19 @@ if (Meteor.isClient) {
   Template.timelineEvent.divWidth = function () {
   	return Session.get("divWidth");
   }
+
+
+  Template.timelineEvent.helpers({
+    dateSize: function () {
+      return Session.get("dateSize");
+    },
+    titleSize: function () {
+      return Session.get("titleSize");
+    },
+    subtitleSize: function () {
+      return Session.get("subtitleSize");
+    }
+  });
 
   Template.timelineEvent.events({
     'click .timelineText': function () {
@@ -339,6 +312,24 @@ if (Meteor.isClient) {
     return Session.get("entryDivWidth");
   }
 
+  // Template.settingsPane.helpers({
+  // dateSize: function () {
+  //   return Session.get("dateSize");
+  // },
+  // titleSize: function () {
+  //   return Session.get("titleSize");
+  // },
+  // subtitleSize: function () {
+  //   return Session.get("subtitleSize");
+  // }, 
+  // yAxisOffset: function () {
+  //   return Session.get("yAxisOffset");
+  // },
+  // divWidth: function () {
+  //   return Session.get("divWidth");
+  // }
+  // });
+
   Template.settingsPane.rendered = function () {
     $('#offsetSlider').slider({
       min: 400,
@@ -407,9 +398,79 @@ if (Meteor.isClient) {
           lineColor: "#bababa",
           subtitleColor: "#7a9bc2",
           titleColor: "#0066ff",
-          yAxisOffset: 400
+          yAxisOffset: 400,
+          dateSize: 14,
+          titleSize: 18,
+          subtitleSize: 14, 
+          lineWeight: 1
         }
       });
+    }, 
+    'click #dateFontSmaller': function (event) {
+      var dateSize = Session.get("dateSize") - 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          dateSize: dateSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #dateFontBigger': function (event) {
+      var dateSize = Session.get("dateSize") + 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          dateSize: dateSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #titleFontSmaller': function (event) {
+      var titleSize = Session.get("titleSize") - 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          titleSize: titleSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #titleFontBigger': function (event) {
+      var titleSize = Session.get("titleSize") + 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          titleSize: titleSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #subtitleFontSmaller': function () {
+      var subtitleSize = Session.get("subtitleSize") - 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          subtitleSize: subtitleSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #subtitleFontBigger': function (event) {
+      var subtitleSize = Session.get("subtitleSize") + 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          subtitleSize: subtitleSize
+        }
+      });
+      event.target.blur();
     }
   });
 
@@ -691,12 +752,15 @@ if (Meteor.isClient) {
       if (appSettingsQuery[0].yAxisOffset) { Session.set("yAxisOffset", appSettingsQuery[0].yAxisOffset) };
 			if (appSettingsQuery[0].divWidth) { Session.set("divWidth", appSettingsQuery[0].divWidth) };
 			if (appSettingsQuery[0].entryDivWidth) { Session.set("entryDivWidth", appSettingsQuery[0].entryDivWidth) };
-			if (appSettingsQuery[0].checkedTags) { Session.set("checkedTags", appSettingsQuery[0].checkedTags) };
       if (appSettingsQuery[0].backColor) { Session.set("backColor", appSettingsQuery[0].backColor) };
       if (appSettingsQuery[0].lineColor) { Session.set("lineColor", appSettingsQuery[0].lineColor) };
       if (appSettingsQuery[0].dateColor) { Session.set("dateColor", appSettingsQuery[0].dateColor) };
       if (appSettingsQuery[0].titleColor) { Session.set("titleColor", appSettingsQuery[0].titleColor) };
       if (appSettingsQuery[0].subtitleColor) { Session.set("subtitleColor", appSettingsQuery[0].subtitleColor) };
+      if (appSettingsQuery[0].dateSize) { Session.set("dateSize", appSettingsQuery[0].dateSize) };
+      if (appSettingsQuery[0].titleSize) { Session.set("titleSize", appSettingsQuery[0].titleSize) };
+      if (appSettingsQuery[0].subtitleSize) { Session.set("subtitleSize", appSettingsQuery[0].subtitleSize) };
+      if (appSettingsQuery[0].lineWeight) { Session.set("lineWeight", appSettingsQuery[0].lineWeight) };
 	  }
 
     var backColor = Session.get("backColor");
@@ -706,18 +770,6 @@ if (Meteor.isClient) {
     } else {
       $('body').css('background-color', "#ffffff" );
     }
-
-    // var lineColor = Session.get("lineColor");
-    // $('.lineColor').css({ 'border-color': lineColor });
-
-      // else {
-	     //  AppSettings.insert({
-	     //    yAxisOffset: 578,
-	     //    entryDivWidth: 300, 
-	     //    divWidth: 300
-	     //  }
-        // );
-    // }
   });
 
  Meteor.startup(function () {
@@ -751,47 +803,5 @@ if (Meteor.isClient) {
 });
 
 
-}
-
-if (Meteor.isServer) {
-  Meteor.startup(function () {
-    // code to run on server at startup
-  });
 
 
-
-	Meteor.methods({
-	  checkTag: function (tagName, caseID) {
-	    EventEntries.update( { caseID: caseID, eventTags: tagName }, { $set: { checked: true } }, { multi: true } ) 
-	    return true;
-	  }, 
-	  uncheckTag: function (tagName, caseID) {
-	  	EventEntries.update( { caseID: caseID, eventTags: tagName }, { $set: { checked: false } }, { multi: true } ) 
-	  	return true;
-	  }, 
-	  checkAll: function (caseID) {
-	  	EventEntries.update( { caseID: caseID }, { $set: { checked: true } }, { multi: true } ) 
-	  	return true;
-	  },
-	  uncheckAll: function (caseID) {
-	  	EventEntries.update( { caseID: caseID }, { $set: { checked: false } }, { multi: true } ) 
-	  	return true;
-	  },
-    getEmailFromID: function () {
-      // var userEmail = Meteor.users.find({ _id: userID });
-      return "Test";
-    }
-	});
-
-  Meteor.publish("timelineData", function (caseID) {
-    check(caseID, String);
-    return [
-      EventEntries.find({ caseID: caseID }),
-      Cases.find({ _id: caseID })
-    ]
-  });
-
-  Meteor.publish("caseList", function () {
-    return Cases.find({ $or: [ { invited: this.userId }, { owner: this.userId } ] }); });
-
-}

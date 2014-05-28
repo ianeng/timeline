@@ -102,9 +102,9 @@
 <template name="timelineEvent">
 	<div class="timelineEvent lineColor" id="{{_id}}" style="left: {{leftOffset}}px; top: {{topOffset}}px; height: {{getLineLength topOffset}}px; width: {{divWidth}}px; border-color: {{getLineColor}};"> 
 		<div class="timelineText">
-			<h5 style="color: {{getDateColor}}">{{formatDate eventDate "short"}}</h5>
-			<h4 style="color: {{getTitleColor}}">{{eventTitle}}</h4>
-			<h5><small style="color: {{getSubtitleColor}};">{{subTitle}}</small></h5>
+			<h5 style="color: {{getDateColor}}; font-size: {{dateSize}}px;">{{formatDate eventDate "short"}}</h5>
+			<h4 style="color: {{getTitleColor}}; font-size: {{titleSize}}px;">{{eventTitle}}</h4>
+			<h5 style="color: {{getSubtitleColor}}; font-size: {{subtitleSize}}px;">{{subTitle}}</h5>
 		</div>
 	</div>
 </template>
@@ -227,16 +227,38 @@
 			  <div id="stylePicker">
 				  <label for="bgColor">Background color</label><br>
 				  <input type="text" class="form-control" id="bgColor" style="background-color: {{backColor}}" />
+				  <br>
 				  <label for="lineColor">Line color</label><br>
 				  <input type="text" class="form-control" id="lineColor" style="background-color: {{getLineColor}}" />
-				  <label for="dateColor">Date color</label><br>
-				  <input type="text" class="form-control" id="dateColor" style="background-color: {{getDateColor}}" />
-				  <label for="dateColor">Title color</label><br>
-				  <input type="text" class="form-control" id="titleColor" style="background-color: {{getTitleColor}}"/>
-				  <label for="subtitleColor">Subtitle color</label><br>
-				  <input type="text" class="form-control" id="subtitleColor" style="background-color: {{getSubtitleColor}}"/>
 				  <br>
-				</div>
+				  <label for="dateColor">Date</label><br>
+					<div class="input-group">
+						<input type="text" class="form-control inline pull-left" id="dateColor" style="background-color: {{getDateColor}};" />
+					  	<div class="input-group-btn">
+					     	<button type="button" id="dateFontSmaller" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button>
+					  		<button type="button" id="dateFontBigger" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
+					  	</div>
+					</div>
+					<br>
+					<label for="titleColor" class="clearfix">Title</label><br>
+				  	<div class="input-group">
+				  		<input type="text" class="form-control" id="titleColor" style="background-color: {{getTitleColor}};"/>
+				  		<div class="input-group-btn">
+					  		<button type="button" id="titleFontSmaller" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button>
+					  		<button type="button" id="titleFontBigger" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
+						</div>
+					</div>
+					<br>
+				  	<label for="subtitleColor">Subtitle</label><br>
+				 	<div class="input-group">
+				  		<input type="text" class="form-control inline pull-left" id="subtitleColor" style="background-color: {{getSubtitleColor}};"/>
+				  		 <div class="input-group-btn">
+					  		<button type="button" id="subtitleFontSmaller" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button>
+					  		<button type="button" id="subtitleFontBigger" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
+						</div>
+					</div>
+				  	<br>
+					</div>
 				<button type="button" class="btn btn-default btn-sm btn-block" id="slideOpenSettings">
 	  				<span id="settingsButtonText">Show more</span>
 				</button>
@@ -249,6 +271,7 @@
 	<div class="panel panel-default">
   		<div class="panel-heading">Users</div>
   		<div class="panel-body">
+  			{{owner}}<br><br>
   			{{#each invited}}
   				{{.}}<br><br>
   			{{/each}}
