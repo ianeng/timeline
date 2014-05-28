@@ -1,0 +1,175 @@
+/* CSS declarations go here */
+
+html {
+	overflow-y: scroll; 
+}
+
+.entryListings {
+	padding: 30px;
+
+}
+.hoverList:hover .floatButtons {
+	opacity: 1;
+}
+
+/*#eventList {
+	float: left;
+	width: 70%;
+	margin-top: 30px;
+}*/
+
+.tagTitle {
+	margin-bottom: 10px;
+}
+#editModal
+{
+  /*width: 950px; your width 
+  /*margin-left: -475px;*/
+  margin: 0px auto;
+}
+
+#timelineBox {
+	width: 100%;
+/*	height: 300px;*/
+	height: 500px;
+
+	padding-bottom: 25px;
+/*	border-bottom: 1px solid black; */
+}
+
+.timelineEvent {
+	position: absolute;
+	/*left: 0px;*/
+	border-left: 1px solid black;
+	width: 200px;
+	height: 115px;
+	padding-left: 8px;
+	top: 500px;
+	transition: all 1s ease;
+	/*bottom: 600px;*/
+	/*float: right;*/
+}
+
+.timelineEvent h4, h5 {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+#controlKit {
+	margin-top: 50px;
+	display: none;
+	clear: both;
+}
+
+#axisLabelContainer {
+	white-space: nowrap;
+	overflow-x: hidden;
+}
+
+.axisLabel {
+/*	 -moz-box-shadow:    0 0px 15px .1px #ccc;
+  	-webkit-box-shadow: 0 0px 10px .1px #ccc;
+  	box-shadow:         0 0px 10px .1px #ccc;*/
+	border-top: 1px solid black;
+	border-right: 1px solid black;
+	text-align: center;
+	float: left;
+	display: inline-block;
+	white-space: normal;
+	overflow: hidden;
+	/*transition: all 0.1s ease;*/
+}
+
+
+.slider {
+	width: 220px;
+}
+.datepicker {
+	z-index: 2000 !important;
+}
+
+/*#settingsPane {
+	float: right;
+}*/
+
+/*.panel {
+	float: right;
+	width: 300px;
+}*/
+
+#editButtonBox {
+	padding-top: 15px;
+	width: 100px;
+	height: 25px; 
+
+}
+
+#editButton {
+	display: none;
+}
+
+.floatButtons {
+	position: absolute;
+	width: 60px;
+	right: 0px;
+	opacity: 0;
+	transition: opacity .25s ease-in-out;
+   	-moz-transition: opacity .25s ease-in-out;
+   	-webkit-transition: opacity .25s ease-in-out;
+	/*vertical-align: middle;*/
+}
+
+
+.floatButtons.tagModal {
+	width: 35px;
+}
+
+.floatButtons.resetButton {
+	width: 70px;
+}
+.floatButtons.tagButtons {
+	width: 80px;
+}
+
+.tagTitle {
+	cursor: pointer;
+}
+#stylePicker {
+	display: none;
+}
+/*.lineColor {
+	border-color: white;
+}*/
+
+#showCreateCaseModal {
+	float: right;
+	display: inline;
+	width: 99%;
+}
+
+#newTimelineInput {
+	display: inline;
+	width: 0%;
+	height: 45px;
+	opacity: 0;
+	float: left;
+	padding: 0px;
+	margin: 0px;
+
+}
+
+#inviteUserInput {
+	display: inline;
+	width: 0%;
+	height: 30px;
+	opacity: 0;
+	float: left;
+	padding: 0px;
+	margin: 0px;
+
+}
+#addUserButton {
+	float: right;
+	display: inline;
+	width: 99%;
+}
