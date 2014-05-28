@@ -14,7 +14,8 @@
       Session.set("caseID", this.params._id);
       Session.set("controlKitShow", false);
       return Cases.findOne({_id: this.params._id}); 
-    }
+    },
+    notFoundTemplate: 'loading' 
     
   });
 });

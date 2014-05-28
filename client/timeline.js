@@ -105,11 +105,16 @@ Cases = new Meteor.Collection('Cases');
   	var rsDate = dateOfRightSide(originalDate); 
   	var lsDate = dateOfLeftBuffer(originalDate);
 
-	var entriesInDateRange = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: rsDate }}, { sort: { eventDate: 1 }}).fetch(); 
-	if (entriesInDateRange.length > 1 ) {
-		var entriesAbove = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: originalDate }}, { sort: { eventDate: 1 }}).fetch();
-		var entriesBelow = EventEntries.find({ checked: true, eventDate: {$gte: originalDate, $lt: rsDate }}, { sort: { eventDate: 1 }}).fetch();
-		var posPercent = (entriesAbove.length + 1) / (entriesAbove.length + entriesBelow.length + 1)
+	var entriesInDateRange = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: rsDate }}, { sort: { eventDate: 1 }}).count(); 
+	if (entriesInDateRange > 1 ) {
+		var entriesAbove = EventEntries.find({ checked: true, eventDate: {$gte: lsDate, $lt: originalDate }}).count();
+    var entriesEqual = EventEntries.find({ checked: true, eventDate: originalDate }).count();
+    if (entriesEqual > 1) {
+       var equalEntriesAbove = EventEntries.find({ checked: true, eventDate: originalDate, _id: { $gt: this._id } }).count(); 
+       entriesAbove = entriesAbove + equalEntriesAbove; 
+    }
+		var entriesBelow = EventEntries.find({ checked: true, eventDate: {$gte: originalDate, $lt: rsDate }}).count();
+		var posPercent = (entriesAbove + 1) / (entriesInDateRange + 1)
 		var topOffset = posPercent * Session.get("yAxisOffset");
 	} else {
 		var topOffset = 0.5 * Session.get("yAxisOffset");
