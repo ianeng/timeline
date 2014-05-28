@@ -127,6 +127,19 @@ Cases = new Meteor.Collection('Cases');
   	return Session.get("divWidth");
   }
 
+
+  Template.timelineEvent.helpers({
+    dateSize: function () {
+      return Session.get("dateSize");
+    },
+    titleSize: function () {
+      return Session.get("titleSize");
+    },
+    subtitleSize: function () {
+      return Session.get("subtitleSize");
+    }
+  });
+
   Template.timelineEvent.events({
     'click .timelineText': function () {
         Session.set("editEventTitle", this.eventTitle);
@@ -299,6 +312,24 @@ Cases = new Meteor.Collection('Cases');
     return Session.get("entryDivWidth");
   }
 
+  // Template.settingsPane.helpers({
+  // dateSize: function () {
+  //   return Session.get("dateSize");
+  // },
+  // titleSize: function () {
+  //   return Session.get("titleSize");
+  // },
+  // subtitleSize: function () {
+  //   return Session.get("subtitleSize");
+  // }, 
+  // yAxisOffset: function () {
+  //   return Session.get("yAxisOffset");
+  // },
+  // divWidth: function () {
+  //   return Session.get("divWidth");
+  // }
+  // });
+
   Template.settingsPane.rendered = function () {
     $('#offsetSlider').slider({
       min: 400,
@@ -367,9 +398,79 @@ Cases = new Meteor.Collection('Cases');
           lineColor: "#bababa",
           subtitleColor: "#7a9bc2",
           titleColor: "#0066ff",
-          yAxisOffset: 400
+          yAxisOffset: 400,
+          dateSize: 14,
+          titleSize: 18,
+          subtitleSize: 14, 
+          lineWeight: 1
         }
       });
+    }, 
+    'click #dateFontSmaller': function (event) {
+      var dateSize = Session.get("dateSize") - 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          dateSize: dateSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #dateFontBigger': function (event) {
+      var dateSize = Session.get("dateSize") + 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          dateSize: dateSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #titleFontSmaller': function (event) {
+      var titleSize = Session.get("titleSize") - 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          titleSize: titleSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #titleFontBigger': function (event) {
+      var titleSize = Session.get("titleSize") + 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          titleSize: titleSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #subtitleFontSmaller': function () {
+      var subtitleSize = Session.get("subtitleSize") - 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          subtitleSize: subtitleSize
+        }
+      });
+      event.target.blur();
+    },
+    'click #subtitleFontBigger': function (event) {
+      var subtitleSize = Session.get("subtitleSize") + 1;  
+      Cases.update({ 
+        _id: Session.get("caseID") 
+      },{ 
+        $set: {
+          subtitleSize: subtitleSize
+        }
+      });
+      event.target.blur();
     }
   });
 
@@ -656,6 +757,10 @@ Cases = new Meteor.Collection('Cases');
       if (appSettingsQuery[0].dateColor) { Session.set("dateColor", appSettingsQuery[0].dateColor) };
       if (appSettingsQuery[0].titleColor) { Session.set("titleColor", appSettingsQuery[0].titleColor) };
       if (appSettingsQuery[0].subtitleColor) { Session.set("subtitleColor", appSettingsQuery[0].subtitleColor) };
+      if (appSettingsQuery[0].dateSize) { Session.set("dateSize", appSettingsQuery[0].dateSize) };
+      if (appSettingsQuery[0].titleSize) { Session.set("titleSize", appSettingsQuery[0].titleSize) };
+      if (appSettingsQuery[0].subtitleSize) { Session.set("subtitleSize", appSettingsQuery[0].subtitleSize) };
+      if (appSettingsQuery[0].lineWeight) { Session.set("lineWeight", appSettingsQuery[0].lineWeight) };
 	  }
 
     var backColor = Session.get("backColor");
